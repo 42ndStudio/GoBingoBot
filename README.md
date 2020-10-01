@@ -19,6 +19,7 @@ Features | Funciones:
  - Organizers can be notified of winning boards
  - Organizers can ask if Board has Bingo
  - Can Relay messages to Group Chat
+- Keep track of Sold boards
 
 ## Run
 ```bash
