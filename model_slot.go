@@ -1,0 +1,28 @@
+// 42nd Studio @2020
+// MuchLove
+package main
+
+import (
+	"errors"
+)
+
+func (slot *BingoSlot) guardar() error {
+	var err error
+	// Crear o Actualizar
+	if slot.ID == 0 {
+		err = se.db.Create(&slot).Error
+	} else {
+		err = se.db.Save(&slot).Error
+	}
+	if err != nil {
+		strerr := "error guardando slot object"
+		logError(strerr, err)
+		return errors.New(strerr)
+	}
+	return nil
+}
+
+func (slot *BingoSlot) loadFromBoard(boardID, letter string, number int) error {
+	err := se.db.Where("board_id = ? AND letter = ? AND number = ?", boardID, letter, number).First(&slot).Error
+	return err
+}

@@ -1,8 +1,9 @@
+// 42nd Studio @2020
+// MuchLove
 package main
 
 import (
 	"os"
-	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
@@ -16,7 +17,7 @@ var (
 // server is used to implement helloworld.GreeterServer.
 type server struct {
 	// ID del usuario maestro
-	masterID int64
+	masterID string
 
 	bot *tgbotapi.BotAPI
 
@@ -28,11 +29,12 @@ func main() {
 
 	var err error
 
-	se.masterID, err = strconv.ParseInt(os.Getenv("MASTER_ID"), 10, 64)
+	se.masterID = os.Getenv("MASTER_ID")
 	if err != nil {
 		panic("Missing env['master_id']")
 	}
 
+	go startDB()
 	go runTelegramUpdater()
 
 	select {}

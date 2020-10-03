@@ -28,5 +28,6 @@ export DB_NAME=gobingobot
 export DB_USER=bingopher
 export DB_PASS=secreto
 export TG_KEY="secreto"
+export MASTER_ID="master_telegram_user_id"
 go run . 
 ```
