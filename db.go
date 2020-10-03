@@ -28,11 +28,11 @@ var (
 
 func startDB() {
 	var err error
-	authDBHost = os.Getenv("db_host")
-	authDBPort = os.Getenv("db_port")
-	authDBName = os.Getenv("db_name")
-	authDBUser = os.Getenv("db_user")
-	authDBPass = os.Getenv("db_pass")
+	authDBHost = os.Getenv("DB_HOST")
+	authDBPort = os.Getenv("DB_PORT")
+	authDBName = os.Getenv("DB_NAME")
+	authDBUser = os.Getenv("DB_USER")
+	authDBPass = os.Getenv("DB_PASS")
 	constring := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", authDBUser, authDBPass, authDBHost, authDBPort, authDBName)
 	se.db, err = gorm.Open("mysql", constring)
 	if err != nil {
@@ -46,8 +46,8 @@ func startDB() {
 	for {
 		time.Sleep(time.Second * 350)
 		var count int64
-		se.db.Table("system_events").Where("created_at > NOW() - INTERVAL 24 HOUR").Count(&count)
-		log.Println("last_24h_system_events", zap.Int64("count", count))
+		se.db.Table("bingo_games").Where("created_at > NOW() - INTERVAL 24 HOUR").Count(&count)
+		log.Println("games", zap.Int64("count", count))
 	}
 }
 
@@ -55,7 +55,7 @@ func startDB() {
 // 	Gorm: AutoMigrate run auto migration for given models, will only add missing fields, won't delete/change current data
 func autoMigrate() {
 	se.db.AutoMigrate(&BingoGame{})
-	se.db.AutoMigrate(&BingoClient{})
+	se.db.AutoMigrate(&BingoOrganizer{})
 	se.db.AutoMigrate(&BingoBoard{})
 	se.db.AutoMigrate(&BingoSlot{})
 }
