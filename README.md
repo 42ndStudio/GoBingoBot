@@ -10,7 +10,7 @@ Features | Funciones:
   - [ ] PNG Image can be rendered for each board
   - [ ] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
 
-- [] Multiple Game Modes (Organizers can change it)
+- [ ] Multiple Game Modes (Organizers can change it)
   - [x] Horizontal / Vertical Line
   - [x] C
   - [x] O
