@@ -7,14 +7,14 @@ Features | Funciones:
 
 - [x] Generate Boards 
   - [x] Each has a unique per game ID 
-  - [] PNG Image can be rendered for each board
-  - [] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
+  - [ ] PNG Image can be rendered for each board
+  - [ ] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
 
 - [] Multiple Game Modes (Organizers can change it)
   - [x] Horizontal / Vertical Line
   - [x] C
   - [x] O
-  - [] Diagonal / & \
+  - [x] Diagonal / & \
   - [x] All
 
 - [x] Can handle Multiple Games with Separate Boards
@@ -22,8 +22,8 @@ Features | Funciones:
 - [x] Keeps Track of Balots
  - [x] Organizers are notified on number of winners as soon as they draw a ballot
  - [x] Organizers can ask if Board has Bingo
- - [] Organizers can ask for drawn balots
- - [] Can Relay messages to Group Chat
+ - [ ] Organizers can ask for drawn balots
+ - [ ] Can Relay messages to Group Chat
 
 ## Run
 ```bash
