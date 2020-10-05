@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -108,23 +110,87 @@ func UIDNewBytes(n int, lb string) string {
 
 func getGameNOrganizer(fromID, gameID string) (*BingoGame, *BingoOrganizer, error) {
 	var (
+		err       error
 		game      BingoGame
 		organizer BingoOrganizer
 	)
-	err := game.loadFromID(gameID)
-	if err != nil {
-		strerr := fmt.Sprintf("failed loading game (%s) from id for details", gameID)
-		logError(strerr, err)
-		return nil, nil, errors.New(strerr)
-	}
-	if fromID != se.masterID {
-		organizer, err = game.loadOrganizer(fromID)
+	if gameID != "" {
+		err = game.loadFromID(gameID)
+		if err != nil {
+			strerr := fmt.Sprintf("failed loading game (%s) from id for details", gameID)
+			logError(strerr, err)
+			return nil, nil, errors.New(strerr)
+		}
+		if fromID != se.masterID {
+			organizer, err = game.getOrganizer(fromID)
+			if err != nil || organizer.ID == 0 {
+				strerr := fmt.Sprintf("failed getting organizer TG:%s from game", fromID)
+				logError(strerr, err)
+				return nil, nil, errors.New(strerr)
+			}
+		}
+	} else {
+		err = organizer.loadFromTG(fromID)
 		if err != nil || organizer.ID == 0 {
-			strerr := fmt.Sprintf("failed getting organizer TG:%s from game", fromID)
+			strerr := fmt.Sprintf("failed getting organizer TG:%s from tgid", fromID)
+			logError(strerr, err)
+			return nil, nil, errors.New(strerr)
+		}
+
+		game, err = organizer.getGame()
+
+		if err != nil || organizer.ID == 0 {
+			strerr := fmt.Sprintf("failed getting game from organizer", fromID)
 			logError(strerr, err)
 			return nil, nil, errors.New(strerr)
 		}
 	}
-
 	return &game, &organizer, nil
+}
+
+// needFromDynamic retorna cuantas casillas deben estar marcadas
+// ej: en 'linea' 5
+// 	   en 'O' 16
+func needFromDynamic(dinamica string) int {
+	dinamica = strings.ToLower(dinamica)
+	if len(dinamica) == 0 {
+		logError("missing dinamica", nil)
+		return 0
+	}
+	if dinamica == "a" {
+		return 25
+	} else if dinamica[0] == 'l' || dinamica[0] == '/' || dinamica[0] == '\\' {
+		return 5
+	} else if dinamica[0] == 'o' {
+		return 16
+	} else if dinamica[0] == 'u' {
+		return 13
+	} else if dinamica[0] == 'c' {
+		return 13
+	}
+	return 0
+}
+
+func letter2X(b string) int {
+	switch strings.ToLower(b) {
+	case "b":
+		return 0
+	case "i":
+		return 1
+	case "n":
+		return 2
+	case "g":
+		return 3
+	case "o":
+		return 4
+	}
+	return -1
+}
+
+func printSlot(n int) string {
+	str := strconv.Itoa(n)
+	if len(str) == 1 {
+		str = " " + str
+	}
+	return str
 }

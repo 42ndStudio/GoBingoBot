@@ -15,12 +15,15 @@ import (
 // BingoGame es un evento de bingo el cual tiene muchos tableros asociados
 type BingoGame struct {
 	gorm.Model
-	BingoID             string `gorm:"unique;not null"`
-	Name                string `gorm:"not null"`
-	CurrentMode         string `gorm:"null"`
-	BoardsSold          int    `gorm:"not null" sql:"DEFAULT:0"`
-	Password            string `gorm:"not null"`
-	AcceptingOrganizers bool   `gorm:"not null"`
+	BingoID             string       `gorm:"unique;not null"`
+	Name                string       `gorm:"not null"`
+	CurrentMode         string       `gorm:"null"`
+	BoardsSold          int          `gorm:"not null" sql:"DEFAULT:0"`
+	Password            string       `gorm:"not null"`
+	AcceptingOrganizers bool         `gorm:"not null"`
+	Playing             bool         `gorm:"null"`
+	DrawnBalots         string       `gorm:"null"`
+	boards              []BingoBoard `gorm:"-"`
 }
 
 // BingoOrganizer es un organizador del bingo
@@ -50,5 +53,6 @@ type BingoSlot struct {
 	BoardID string `gorm:"not null"`
 	Letter  string `gorm:"not null"`
 	Number  int    `gorm:"not null"`
+	Y       int    `gorm:"not null"`
 	Marked  bool   `gorm:"null"`
 }
