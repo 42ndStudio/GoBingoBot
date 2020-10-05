@@ -19,8 +19,8 @@ const errorOccurred = "Ocurrió un error x.o\n"
 
 var gifs = map[string][]string{
 	"hello":    {"https://www.reactiongifs.com/r/fgwv.gif"},
-	"bingo":    {"https://media.giphy.com/media/C8CZu2szOWVuGB8dB9/giphy.gif"},
-	"fail":     {"https://media.giphy.com/media/N35rW3vRNeaDC/giphy.gif", "https://media.giphy.com/media/1VT3UNeWdijUSMpRL4/giphy.gif", "https://media.giphy.com/media/dlMIwDQAxXn1K/giphy.gif", "https://media.giphy.com/media/biKilc2r3kGOyXNiDq/giphy.gif", "https://media.giphy.com/media/Q61LJj43H48z1FIK4X/giphy-downsized-large.gif", "https://media.giphy.com/media/l1J9EdzfOSgfyueLm/giphy.gif", "https://media.giphy.com/media/jTkAOfSysPWVk3r68Q/giphy.gif"},
+	"bingo":    {"https://media.giphy.com/media/BLjbqh9Yg2LqzBIbf6/giphy.gif", "https://media.giphy.com/media/6CYXe7Hf8FZyU/giphy.gif", "https://media.giphy.com/media/J8NaR2tsCdNew/giphy.gif"},
+	"fail":     {"https://media.giphy.com/media/N35rW3vRNeaDC/giphy.gif", "https://media.giphy.com/media/1VT3UNeWdijUSMpRL4/giphy.gif", "https://media.giphy.com/media/dlMIwDQAxXn1K/giphy.gif", "https://media.giphy.com/media/biKilc2r3kGOyXNiDq/giphy.gif", "https://media.giphy.com/media/Q61LJj43H48z1FIK4X/giphy-downsized-large.gif", "https://media.giphy.com/media/l1J9EdzfOSgfyueLm/giphy.gif"},
 	"confused": {"https://media.giphy.com/media/gKsJUddjnpPG0/giphy.gif", "https://media.giphy.com/media/xT0BKmtQGLbumr5RCM/giphy.gif", "https://media.giphy.com/media/ji6zzUZwNIuLS/giphy.gif", "https://media.giphy.com/media/WRQBXSCnEFJIuxktnw/giphy.gif", "https://media.giphy.com/media/a0FuPjiLZev4c/giphy.gif", "https://media.giphy.com/media/xDQ3Oql1BN54c/giphy.gif", "https://media.giphy.com/media/12xsYM8AbsyoCs/giphy.gif", "https://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif", "https://media.giphy.com/media/XQvhpuryrPGnK/giphy.gif", "https://media.giphy.com/media/lkdH8FmImcGoylv3t3/giphy.gif", "https://media.giphy.com/media/jkojXEIwuqp6o/giphy.gif", "https://media.giphy.com/media/fpXxIjftmkk9y/giphy.gif", "https://media.giphy.com/media/vh9isNb4S2Spa/giphy.gif", "https://media.giphy.com/media/iHe7mA9M9SsyQ/giphy.gif"},
 }
 
@@ -31,16 +31,37 @@ var masterKeyboard = tgbotapi.NewReplyKeyboard(
 	),
 )
 
-var organizerKeyboard = tgbotapi.NewReplyKeyboard(
-	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("Iniciar Juego"),
-		tgbotapi.NewKeyboardButton("Comprobar Tablero"),
-	),
-	tgbotapi.NewKeyboardButtonRow(
+func gimmeOrganizerKeyboard(telegramID string) *tgbotapi.ReplyKeyboardMarkup {
+	var (
+		mk   tgbotapi.ReplyKeyboardMarkup
+		rows [][]tgbotapi.KeyboardButton
+	)
+
+	_, _, err := getGameNOrganizer(telegramID, "")
+	if err != nil {
+		strerr := fmt.Sprintf("failed loading game from organizer (TG %s)", telegramID)
+		logError(strerr, err)
+		return nil
+	}
+
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("Nueva partida"),
 		tgbotapi.NewKeyboardButton("Cambiar Modo de Juego"),
-		tgbotapi.NewKeyboardButton("Ajustes Notificaciones"),
-	),
-)
+	))
+
+	if waitingon[telegramID] == "check_game" {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Terminar Comprobacion"),
+		))
+	} else {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Comprobar Tablero"),
+		))
+	}
+
+	mk = tgbotapi.NewReplyKeyboard(rows...)
+	return &mk
+}
 
 // Arreglo donde el key es el Telegram ID de quien estamos esperando una respuesta, el valor es la operacion pendiente
 var waitingon map[string]string
@@ -150,17 +171,22 @@ func processCommand(comando string, update tgbotapi.Update) {
 		msg.Text = "I'm ok. 💜 Love 4 U"
 	case "close":
 		msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+	case "nueva partida":
+		msg = cmdStartGame(mesOb, msg, name, fromID)
+	case "comprobar tablero":
+		msg = cmdCheckBoardPre(msg, fromID)
+		msg.ReplyMarkup = gimmeOrganizerKeyboard(fromID)
+	case "terminar comprobacion":
+		delete(waitingon, fromID)
+		msg.Text = "ok, volvemos al juego, quedo atento a balotas"
+		msg.ReplyMarkup = gimmeOrganizerKeyboard(fromID)
 	default:
 		if resp, ok := pendingComm(mesOb, msg, name, fromID); ok {
 			msg = resp
+		} else if msg, ok = specialComm(comando, fromID, msg); ok {
 		} else {
-			msg, ok = specialComm(comando, fromID, msg)
-			if ok {
-
-			} else {
-				msg.Text = "Lo siento, no reconozco ese comando\nSorry, I don't know that command \n" + randomGif("confused")
-				log.Println(fmt.Sprintf("ERR: unknown command %s", comando))
-			}
+			msg.Text = "Lo siento, no reconozco ese comando\nSorry, I don't know that command \n" + randomGif("confused")
+			log.Println(fmt.Sprintf("ERR: unknown command %s", comando))
 		}
 	}
 	se.bot.Send(msg)
@@ -192,7 +218,7 @@ func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, 
 				logError(strerr, err)
 			} else {
 				respmsg.Text = fmt.Sprintf("Correcto, ahora estas acargo")
-				respmsg.ReplyMarkup = organizerKeyboard
+				respmsg.ReplyMarkup = gimmeOrganizerKeyboard(fromID)
 				delete(waitingon, fromID)
 			}
 		case "new_game":
@@ -210,6 +236,14 @@ func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, 
 				respmsg.Text = fmt.Sprintf("Juego %s creado", game.BingoID)
 				respmsg.ReplyMarkup = masterKeyboard
 				delete(waitingon, fromID)
+			}
+		case "check_game":
+			ok = true // si era pendiente
+			if mesOb.Text == "" {
+				logError("missing board id", nil)
+				respmsg.Text = "falta el id del tablero"
+			} else {
+				respmsg = cmdCheckBoard(respmsg, fromID, mesOb.Text)
 			}
 		}
 	}
@@ -242,8 +276,9 @@ func specialComm(command, fromID string, msg tgbotapi.MessageConfig) (tgbotapi.M
 	executed := false
 	msg.Text = errorOccurred
 	var regs = map[string]string{
-		"game_details": `(?m)^game_details:([\w]*)`,
-		"board_new":    `(?m)^board_new:([\w]*)`,
+		"game_details": `(?m)^game_details:([\w-]*)`,
+		"board_new":    `(?m)^board_new:([\w-]*)`,
+		"bingo_balot":  `(?m)^([BINGObingo])([\d]{1,2})`,
 	}
 
 	for cmd, reg := range regs {
@@ -268,6 +303,10 @@ func specialComm(command, fromID string, msg tgbotapi.MessageConfig) (tgbotapi.M
 					return msg, true
 				}
 				return msg, true
+
+			case "bingo_balot":
+				// Drawm Balot, check organizer and game playing
+				return cmdDrawnBalot(fromID, rs[1], rs[2], msg)
 			}
 		}
 	}

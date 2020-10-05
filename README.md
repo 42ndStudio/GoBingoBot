@@ -2,23 +2,28 @@
 Telegram Bingo Bot written in GoLang
 
 Features | Funciones: 
-- Generate Boards
-  - Each has a unique per game ID 
-  - PNG Image can be rendered for each board
-  - Organizers can ask for board images like: All Boards, Unsold Boards, Specific Board
+- [x] Every Game can have multiple Organizers (Organizers change game mode, and register drawn ballots)
+  - [x] Keep Track of sold boards
 
-- Multiple Game Modes
-  - Horizontal / Vertical Line
-  - C
-  - O
-  - Diagonal / & \
+- [x] Generate Boards 
+  - [x] Each has a unique per game ID 
+  - [] PNG Image can be rendered for each board
+  - [] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
 
-- Can handle Multiple Games with Separate Boards
+- [] Multiple Game Modes (Organizers can change it)
+  - [x] Horizontal / Vertical Line
+  - [x] C
+  - [x] O
+  - [] Diagonal / & \
+  - [x] All
 
-- Keeps Track of Balots
- - Organizers can be notified of winning boards
- - Organizers can ask if Board has Bingo
- - Can Relay messages to Group Chat
+- [x] Can handle Multiple Games with Separate Boards
+
+- [x] Keeps Track of Balots
+ - [x] Organizers are notified on number of winners as soon as they draw a ballot
+ - [x] Organizers can ask if Board has Bingo
+ - [] Organizers can ask for drawn balots
+ - [] Can Relay messages to Group Chat
 
 ## Run
 ```bash
@@ -27,7 +32,7 @@ export DB_PORT=3306
 export DB_NAME=gobingobot
 export DB_USER=bingopher
 export DB_PASS=secreto
-export TG_KEY="secreto"
-export MASTER_ID="master_telegram_user_id"
+export TG_KEY=secreto
+export MASTER_ID=master_telegram_user_id  #MASTER_ID is the manager's TelegramID
 go run . 
 ```
