@@ -23,6 +23,7 @@ type BingoGame struct {
 	AcceptingOrganizers bool         `gorm:"not null"`
 	Playing             bool         `gorm:"null"`
 	DrawnBalots         string       `gorm:"null"`
+	UniqueBoards        bool         `gorm:"null"` //If true, there will be no repeated boards
 	boards              []BingoBoard `gorm:"-"`
 }
 
@@ -44,6 +45,7 @@ type BingoBoard struct {
 	GamesWon    int         `gorm:"null"`
 	GamesWonIds string      `gorm:"null"`
 	Sold        bool        `gorm:"null"`
+	BoardHash   string      `gorm:"null"` // Used to detect repeated boards (for Unique Bingo Mode)
 	slots       []BingoSlot `gorm:"-"`
 }
 

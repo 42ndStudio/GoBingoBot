@@ -61,7 +61,7 @@ func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig) (tgbotapi.Me
 		logError(strerr, err)
 		return msg, errors.New(strerr)
 	}
-	err = board.generate()
+	err = board.generate(game)
 	if err != nil {
 		strerr := fmt.Sprintf("failed generating board for game (%s)", gameID)
 		logError(strerr, err)
@@ -84,14 +84,55 @@ func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig) (tgbotapi.Me
 		logError(strerr, err)
 	}
 
-	msg.Text, err = board.printText()
-	if err != nil {
-		strerr := fmt.Sprintf("failed printing text board (%s) for game (%s)", board.BoardID, gameID)
-		logError(strerr, err)
-		return msg, errors.New(strerr)
-	}
+	go func() {
+		err = board.drawImage()
+		if err != nil {
+			strerr := fmt.Sprintf("failed drawing board (%s) for game (%s)", board.BoardID, gameID)
+			logError(strerr, err)
+			return
+		}
+
+		imsg := tgbotapi.NewPhotoUpload(msg.ChatID, "out.png")
+		imsg.Caption = board.BoardID
+
+		se.bot.Send(imsg)
+
+		go func() {
+			msg, err = cmdGameDetails(fromID, game.BingoID, msg)
+			if err == nil {
+				se.bot.Send(msg)
+			}
+		}()
+	}()
+
+	msg.Text = "cargando..."
+	//if err != nil {
+	//	strerr := fmt.Sprintf("failed printing text board (%s) for game (%s)", board.BoardID, gameID)
+	//	logError(strerr, err)
+	//	return msg, errors.New(strerr)
+	//}
 
 	return msg, nil
+}
+
+// cmdSellBoard ejecutado por organizador para vender (generar) un tablero
+func cmdSellBoard(respmsg tgbotapi.MessageConfig, fromID string) tgbotapi.MessageConfig {
+	var ()
+	respmsg.Text = errorOccurred + randomGif("fail")
+
+	game, _, err := getGameNOrganizer(fromID, "")
+	if err != nil {
+		strerr := fmt.Sprintf("failed loading game from organizer (TG %s) @sellBoard", fromID)
+		logError(strerr, err)
+		return respmsg
+	}
+
+	respmsg, err = cmdBoardNew(fromID, game.BingoID, respmsg)
+	if err != nil {
+		respmsg.Text = errorOccurred + randomGif("fail")
+	}
+
+	return respmsg
 }
 
 // cmdStartGame ejecutado por organizador para iniciar una nueva partida

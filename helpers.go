@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -11,14 +13,14 @@ import (
 	"time"
 )
 
-const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func logError(msg string, err error) {
 	strerr := ""
 	if err != nil {
 		strerr = err.Error()
 	}
-	println(fmt.Sprintf("Error %s: %s", msg, strerr))
+	println(fmt.Sprintf("\033[31m Error %s: %s \033[39m", msg, strerr))
 }
 
 func getEnvOrDefault(llave string, defecto string) string {
@@ -27,6 +29,13 @@ func getEnvOrDefault(llave string, defecto string) string {
 		return defecto
 	}
 	return valor
+}
+
+// GetMD5Hash hashes a string using MD5.
+func GetMD5Hash(text string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 // GenerateRandomBytes returns securely generated random bytes.
@@ -121,13 +130,12 @@ func getGameNOrganizer(fromID, gameID string) (*BingoGame, *BingoOrganizer, erro
 			logError(strerr, err)
 			return nil, nil, errors.New(strerr)
 		}
-		if fromID != se.masterID {
-			organizer, err = game.getOrganizer(fromID)
-			if err != nil || organizer.ID == 0 {
-				strerr := fmt.Sprintf("failed getting organizer TG:%s from game", fromID)
-				logError(strerr, err)
-				return nil, nil, errors.New(strerr)
-			}
+
+		organizer, err = game.getOrganizer(fromID)
+		if err != nil || organizer.ID == 0 && fromID != se.masterID {
+			strerr := fmt.Sprintf("failed getting organizer TG:%s from game", fromID)
+			logError(strerr, err)
+			return nil, nil, errors.New(strerr)
 		}
 	} else {
 		err = organizer.loadFromTG(fromID)
@@ -140,7 +148,7 @@ func getGameNOrganizer(fromID, gameID string) (*BingoGame, *BingoOrganizer, erro
 		game, err = organizer.getGame()
 
 		if err != nil || organizer.ID == 0 {
-			strerr := fmt.Sprintf("failed getting game from organizer", fromID)
+			strerr := fmt.Sprintf("failed getting game from organizer %s", fromID)
 			logError(strerr, err)
 			return nil, nil, errors.New(strerr)
 		}

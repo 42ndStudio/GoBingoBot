@@ -8,6 +8,8 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/fogleman/gg"
 )
 
 func (board *BingoBoard) guardar() error {
@@ -15,7 +17,7 @@ func (board *BingoBoard) guardar() error {
 	// Crear o Actualizar
 	if board.BoardID == "" {
 		// Asignar UID
-		board.BoardID = UIDNew(12)
+		board.BoardID = UIDNew(6)
 		err = se.db.Create(&board).Error
 	} else {
 		err = se.db.Save(&board).Error
@@ -44,7 +46,7 @@ func (board *BingoBoard) loadSlots() error {
 }
 
 // generateSlot genera un slot del tablero de juego
-func (board *BingoBoard) generateSlot(x, y int) error {
+func (board *BingoBoard) generateSlot(x, y int) (string, error) {
 	var (
 		slot        BingoSlot
 		printedNums []int
@@ -81,7 +83,7 @@ func (board *BingoBoard) generateSlot(x, y int) error {
 		if i == 99 {
 			strerr := "failed to generate unique number in 100 attempts"
 			logError(strerr, nil)
-			return errors.New(strerr)
+			return "", errors.New(strerr)
 		}
 	}
 
@@ -90,34 +92,86 @@ func (board *BingoBoard) generateSlot(x, y int) error {
 	if err != nil {
 		strerr := "error guardando slot"
 		logError(strerr, err)
-		return errors.New(strerr)
+		return "", errors.New(strerr)
 	}
 
 	board.slots = append(board.slots, slot)
 
-	return nil
+	return slot.Letter + strconv.Itoa(slot.Number), nil
 }
 
 // generate genera el tablero de juego
-func (board *BingoBoard) generate() error {
-	err := board.loadSlots()
-	if len(board.slots) > 0 {
-		strerr := "tablero ya tiene slots generados"
+func (board *BingoBoard) generate(game *BingoGame) error {
+	var md string
+	unique := true
+	for i := 0; i < 100; i++ {
+		println(fmt.Sprintf("\033[33m genBoard iteration %d \033[39m", i))
+		err := board.loadSlots()
+		if len(board.slots) > 0 {
+			strerr := "tablero ya tiene slots generados"
+			logError(strerr, err)
+			return errors.New(strerr)
+		}
+
+		strSlots := ""
+		for l := 0; l < 5; l++ {
+			for r := 0; r < 5; r++ {
+				str, err := board.generateSlot(l, r)
+				if err != nil {
+					strerr := fmt.Sprintf("failed generating slot %d %d", l, r)
+					logError(strerr, err)
+					return errors.New(strerr)
+				}
+				strSlots += str
+			}
+		}
+
+		md = GetMD5Hash(strSlots)
+		if game != nil && game.UniqueBoards {
+			unique, _ = game.isUnique(string(md[:]))
+		}
+		if unique {
+			break
+		}
+		if i == 99 {
+			strerr := fmt.Sprintf("failed generating unique board for game")
+			if game != nil {
+				strerr += game.BingoID
+			}
+			logError(strerr, err)
+			return errors.New(strerr)
+		}
+		err = board.deleteSlots()
+		if err != nil {
+			strerr := "failed to delete board slots"
+			logError(strerr, nil)
+			return errors.New(strerr)
+		}
+	}
+	board.BoardHash = md
+	if game.UniqueBoards && board.BoardHash == "" {
+		strerr := fmt.Sprintf("empty hash on unique board mode: %s", game.BingoID)
+		logError(strerr, nil)
+		return errors.New(strerr)
+	}
+	err := board.guardar()
+	if err != nil {
+		strerr := fmt.Sprintf("failed saving board hash bid: %s", board.BoardID)
 		logError(strerr, err)
 		return errors.New(strerr)
 	}
-
-	for l := 0; l < 5; l++ {
-		for r := 0; r < 5; r++ {
-			board.generateSlot(l, r)
-		}
-	}
-
 	return nil
 }
 
+// clearSlots desmarca todas las casillas del tablero
 func (board *BingoBoard) clearSlots() error {
 	return se.db.Table("bingo_slots").Where("board_id = ?", board.BoardID).Update("marked", false).Error
+}
+
+// deleteSlots elimina las casillas
+func (board *BingoBoard) deleteSlots() error {
+	board.slots = []BingoSlot{}
+	return se.db.Where("board_id = ?", board.BoardID).Delete(&BingoSlot{}).Error
 }
 
 // printText devuelve el tablero impreso en texto
@@ -144,8 +198,68 @@ func (board *BingoBoard) printText() (string, error) {
 	return msg, nil
 }
 
+func (board *BingoBoard) drawImage() error {
+	err := board.loadSlots()
+	if err != nil {
+		strerr := "error cargando slots @board.printText"
+		logError(strerr, err)
+		return errors.New(strerr)
+	}
+
+	const S = 2160
+	im, err := gg.LoadImage("templateBoard.png")
+	if err != nil {
+		strerr := "failed opening template"
+		logError(strerr, err)
+		return errors.New(strerr)
+	}
+
+	dc := gg.NewContext(S, S)
+	dc.SetRGB(1, 1, 1)
+	dc.Clear()
+
+	dc.SetRGB(0, 0, 0)
+	dc.DrawRoundedRectangle(0, 0, 512, 512, 0)
+	dc.DrawImage(im, 0, 0)
+
+	dc.SetRGB(255, 255, 255)
+	if err := dc.LoadFontFace("moon_get-Heavy.ttf", 77); err != nil {
+		panic(err)
+	}
+
+	dc.DrawStringAnchored(strings.ToUpper(board.BoardID), 235, 64, 0.5, 0.5)
+
+	dc.SetRGB(0, 0, 0)
+	if err := dc.LoadFontFace("moon_get-Heavy.ttf", 96); err != nil {
+		panic(err)
+	}
+
+	var (
+		baseH float64 = 542
+		baseW float64 = 330
+		difH  float64 = 297
+		difW  float64 = 377
+	)
+
+	rows := make(map[int][]int, 5)
+
+	for _, slot := range board.slots {
+		rows[letter2X(slot.Letter)] = append(rows[letter2X(slot.Letter)], slot.Number)
+	}
+
+	for x := 0; x < 5; x++ {
+		for y := 0; y < 5; y++ {
+			dc.DrawStringAnchored(strconv.Itoa(rows[x][y]), baseW+(difW*float64(x)), baseH+(difH*float64(y)), 0.5, 0.5)
+		}
+	}
+
+	dc.Clip()
+	dc.SavePNG("out.png")
+	return nil
+}
+
 // markSlot marca una casilla (si la tiene)
-// retorana si es ganador de la actual dinamica
+// retorna si es ganador de la actual dinamica
 func (board *BingoBoard) markSlots(letter, number, dinamica string) (bool, error) {
 	var (
 		haveInPlace int
