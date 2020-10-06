@@ -7,7 +7,8 @@ Features | Funciones:
 
 - [x] Generate Boards 
   - [x] Each has a unique per game ID 
-  - [ ] PNG Image can be rendered for each board
+  - [x] Unique boards mode
+  - [x] PNG Image can be rendered for each board
   - [ ] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
 
 - [ ] Multiple Game Modes (Organizers can change it)
@@ -24,6 +25,11 @@ Features | Funciones:
  - [x] Organizers can ask if Board has Bingo
  - [ ] Organizers can ask for drawn balots
  - [ ] Can Relay messages to Group Chat
+
+
+## Font
+[MoonGet](https://www.dafont.com/moon-get.font)
+
 
 ## Run
 ```bash

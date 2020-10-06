@@ -5,6 +5,8 @@ package main
 import (
 	"errors"
 	"fmt"
+
+	"github.com/jinzhu/gorm"
 )
 
 func (game *BingoGame) guardar() error {
@@ -57,6 +59,22 @@ func (game *BingoGame) getBoard(boardID string) (BingoBoard, error) {
 func (game *BingoGame) loadBoards() error {
 	err := se.db.Where("bingo_id = ?", game.BingoID).Find(&game.boards).Error
 	return err
+}
+
+func (game *BingoGame) isUnique(hash string) (bool, error) {
+	var existingBoards []BingoBoard
+	println("checky", game.BingoID, hash)
+	err := se.db.Where("bingo_id = ? AND board_hash = ?", game.BingoID, hash).Find(&existingBoards).Error
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		strerr := fmt.Sprintf("failed checking board uniqueness gid: %s", game.BingoID)
+		logError(strerr, err)
+		return false, errors.New(strerr)
+	}
+	if len(existingBoards) > 0 {
+		logError("non unique board!!!", err)
+		return false, nil
+	}
+	return true, nil
 }
 
 // drawBalot registra una balota sacada

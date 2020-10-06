@@ -49,6 +49,10 @@ func gimmeOrganizerKeyboard(telegramID string) *tgbotapi.ReplyKeyboardMarkup {
 		tgbotapi.NewKeyboardButton("Cambiar Modo de Juego"),
 	))
 
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("Vender Tablero"),
+	))
+
 	if waitingon[telegramID] == "check_game" {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Terminar Comprobacion"),
@@ -173,6 +177,8 @@ func processCommand(comando string, update tgbotapi.Update) {
 		msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 	case "nueva partida":
 		msg = cmdStartGame(mesOb, msg, name, fromID)
+	case "vender tablero":
+		msg = cmdSellBoard(msg, fromID)
 	case "comprobar tablero":
 		msg = cmdCheckBoardPre(msg, fromID)
 		msg.ReplyMarkup = gimmeOrganizerKeyboard(fromID)
