@@ -11,10 +11,12 @@ Features | Funciones:
   - [x] PNG Image can be rendered for each board
   - [ ] Organizers can ask for boards like: All Boards, Unsold Boards, Specific Board
 
-- [ ] Multiple Game Modes (Organizers can change it)
+- [x] Multiple Game Modes (Organizers can change it)
   - [x] Horizontal / Vertical Line
   - [x] C
   - [x] O
+  - [ ] U
+  - [x] N
   - [x] Diagonal / & \
   - [x] All
 
@@ -26,10 +28,8 @@ Features | Funciones:
  - [ ] Organizers can ask for drawn balots
  - [ ] Can Relay messages to Group Chat
 
-
 ## Font
 [MoonGet](https://www.dafont.com/moon-get.font)
-
 
 ## Run
 ```bash

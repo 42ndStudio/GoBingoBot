@@ -5,9 +5,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 )
+
+var checkAllBoards bool
 
 func (game *BingoGame) guardar() error {
 	var err error
@@ -56,6 +59,12 @@ func (game *BingoGame) getBoard(boardID string) (BingoBoard, error) {
 	return board, err
 }
 
+func (game *BingoGame) getBoardByInt(boardID int64) (BingoBoard, error) {
+	var board BingoBoard
+	err := se.db.Where("bingo_id = ? AND id = ?", game.BingoID, boardID).First(&board).Error
+	return board, err
+}
+
 func (game *BingoGame) loadBoards() error {
 	err := se.db.Where("bingo_id = ?", game.BingoID).Find(&game.boards).Error
 	return err
@@ -81,6 +90,13 @@ func (game *BingoGame) isUnique(hash string) (bool, error) {
 // marca los tableros que lo tienen
 func (game *BingoGame) drawBalot(letter, number string) (int, error) {
 	winners := 0
+
+	if stringInSlice(letter+number, strings.Split(game.DrawnBalots, ",")) {
+		strerr := fmt.Sprintf("already drawn (%s %s)", letter, number)
+		logError(strerr, nil)
+		return -42, errors.New(strerr)
+	}
+
 	if game.DrawnBalots != "" {
 		game.DrawnBalots += ","
 	}
@@ -91,6 +107,10 @@ func (game *BingoGame) drawBalot(letter, number string) (int, error) {
 		strerr := fmt.Sprintf("failed game.drawBalot (%s %s)", letter, number)
 		logError(strerr, err)
 		return 0, errors.New(strerr)
+	}
+
+	if !checkAllBoards {
+		return 0, nil
 	}
 
 	err = game.loadBoards()

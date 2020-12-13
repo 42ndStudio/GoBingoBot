@@ -171,9 +171,7 @@ func needFromDynamic(dinamica string) int {
 		return 5
 	} else if dinamica[0] == 'o' {
 		return 16
-	} else if dinamica[0] == 'u' {
-		return 13
-	} else if dinamica[0] == 'c' {
+	} else if dinamica[0] == 'u' || dinamica[0] == 'c' || dinamica[0] == 'n' {
 		return 13
 	}
 	return 0
@@ -201,4 +199,13 @@ func printSlot(n int) string {
 		str = " " + str
 	}
 	return str
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

@@ -198,7 +198,7 @@ func (board *BingoBoard) printText() (string, error) {
 	return msg, nil
 }
 
-func (board *BingoBoard) drawImage() error {
+func (board *BingoBoard) drawImage(outName string) error {
 	err := board.loadSlots()
 	if err != nil {
 		strerr := "error cargando slots @board.printText"
@@ -227,7 +227,7 @@ func (board *BingoBoard) drawImage() error {
 		panic(err)
 	}
 
-	dc.DrawStringAnchored(strings.ToUpper(board.BoardID), 235, 64, 0.5, 0.5)
+	dc.DrawStringAnchored(fmt.Sprint(board.ID), 235, 64, 0.5, 0.5)
 
 	dc.SetRGB(0, 0, 0)
 	if err := dc.LoadFontFace("moon_get-Heavy.ttf", 96); err != nil {
@@ -254,7 +254,7 @@ func (board *BingoBoard) drawImage() error {
 	}
 
 	dc.Clip()
-	dc.SavePNG("out.png")
+	dc.SavePNG(outName)
 	return nil
 }
 
@@ -314,6 +314,15 @@ func (board *BingoBoard) markSlots(letter, number, dinamica string) (bool, error
 				} else {
 					linea, err := strconv.Atoi(string(dinamica[1]))
 					if err == nil && linea > 0 && linea <= 5 && slot.Y == linea-1 {
+						haveInPlace++
+					}
+				}
+			} else if dinamica == "n" {
+				if lowerLetter == "b" || lowerLetter == "o" {
+					haveInPlace++
+				} else {
+					x := letter2X(lowerLetter)
+					if x == slot.Y {
 						haveInPlace++
 					}
 				}

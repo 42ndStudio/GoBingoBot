@@ -1,0 +1,103 @@
+##################################################################################################
+##### 42nd Studio
+##### Copyright 2020
+##### MuchLove
+##### The 42nd Studio Team
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: bk42-clients
+  labels:
+    app: bk42-clients
+    service: bk42-clients
+spec:
+  selector:
+    app: bk42-clients
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 3550
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bk42-clients
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bk42-clients-v1
+  labels:
+    app: bk42-clients
+    version: v1
+  annotations:
+    sidecar.jaegertracing.io/inject: with-ingress-host-and-tls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bk42-clients
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: bk42-clients
+        version: v1
+    spec:
+      serviceAccountName: bk42-clients
+      containers:
+        - name: bk42-clients
+          image: sueltalo.42ndstudio.com/42ndstudio/bingobot:latest
+          command: ["/bk42-clients/server"]
+          args: ["serve", "-d"]
+          env:
+            - name: GIT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: gitgen42
+                  key: GIT_USER
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitgen42
+                  key: GIT_TOKEN
+            - name: DB_NAME
+              value: gobingobot
+            - name: DB_HOST
+              value: maria42-mariadb.area42.svc.cluster.local
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: bingobot
+                  key: DB_USER
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: bingobot
+                  key: DB_PASS
+            - name: TG_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bingobot
+                  key: TG_KEY
+            - name: MASTER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: bingobot
+                  key: MASTER_ID
+            - name: SVC_PORT
+              value: "3550"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3550
+              name: grpc
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      imagePullSecrets:
+        - name: registro42

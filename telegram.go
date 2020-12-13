@@ -19,7 +19,7 @@ const errorOccurred = "Ocurrió un error x.o\n"
 
 var gifs = map[string][]string{
 	"hello":    {"https://www.reactiongifs.com/r/fgwv.gif"},
-	"bingo":    {"https://media.giphy.com/media/BLjbqh9Yg2LqzBIbf6/giphy.gif", "https://media.giphy.com/media/6CYXe7Hf8FZyU/giphy.gif", "https://media.giphy.com/media/J8NaR2tsCdNew/giphy.gif"},
+	"bingo":    {"https://media.giphy.com/media/BLjbqh9Yg2LqzBIbf6/giphy.gif", "https://media.giphy.com/media/6CYXe7Hf8FZyU/giphy.gif", "https://media.giphy.com/media/J8NaR2tsCdNew/giphy.gif", "https://media.giphy.com/media/vmon3eAOp1WfK/giphy.gif", "https://media.giphy.com/media/kyLYXonQYYfwYDIeZl/giphy.gif", "https://media.giphy.com/media/3oz8xRF0v9WMAUVLNK/giphy.gif", "https://media.giphy.com/media/ZUomWFktUWpFu/giphy.gif", "https://media.giphy.com/media/3oKIPnF9GF2wT4NU1a/giphy.gif", "https://media.giphy.com/media/3o6Zt8MgUuvSbkZYWc/giphy.gif", "https://media.giphy.com/media/26vUwP2u6YZ5U6WSk/giphy.gif", "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif", "https://media.giphy.com/media/s2qXK8wAvkHTO/giphy.gif"},
 	"fail":     {"https://media.giphy.com/media/N35rW3vRNeaDC/giphy.gif", "https://media.giphy.com/media/1VT3UNeWdijUSMpRL4/giphy.gif", "https://media.giphy.com/media/dlMIwDQAxXn1K/giphy.gif", "https://media.giphy.com/media/biKilc2r3kGOyXNiDq/giphy.gif", "https://media.giphy.com/media/Q61LJj43H48z1FIK4X/giphy-downsized-large.gif", "https://media.giphy.com/media/l1J9EdzfOSgfyueLm/giphy.gif"},
 	"confused": {"https://media.giphy.com/media/gKsJUddjnpPG0/giphy.gif", "https://media.giphy.com/media/xT0BKmtQGLbumr5RCM/giphy.gif", "https://media.giphy.com/media/ji6zzUZwNIuLS/giphy.gif", "https://media.giphy.com/media/WRQBXSCnEFJIuxktnw/giphy.gif", "https://media.giphy.com/media/a0FuPjiLZev4c/giphy.gif", "https://media.giphy.com/media/xDQ3Oql1BN54c/giphy.gif", "https://media.giphy.com/media/12xsYM8AbsyoCs/giphy.gif", "https://media.giphy.com/media/nWn6ko2ygIeEU/giphy.gif", "https://media.giphy.com/media/XQvhpuryrPGnK/giphy.gif", "https://media.giphy.com/media/lkdH8FmImcGoylv3t3/giphy.gif", "https://media.giphy.com/media/jkojXEIwuqp6o/giphy.gif", "https://media.giphy.com/media/fpXxIjftmkk9y/giphy.gif", "https://media.giphy.com/media/vh9isNb4S2Spa/giphy.gif", "https://media.giphy.com/media/iHe7mA9M9SsyQ/giphy.gif"},
 }
@@ -186,8 +186,16 @@ func processCommand(comando string, update tgbotapi.Update) {
 		delete(waitingon, fromID)
 		msg.Text = "ok, volvemos al juego, quedo atento a balotas"
 		msg.ReplyMarkup = gimmeOrganizerKeyboard(fromID)
+	case "cambiar modo de juego":
+		msg = cmdChangeModeTrigger(mesOb, msg, fromID)
+	case "generar":
+		if fromID == se.masterID {
+			msg = cmdGenerateBoards(msg, fromID)
+		} else {
+			msg.Text = randomGif("fail")
+		}
 	default:
-		if resp, ok := pendingComm(mesOb, msg, name, fromID); ok {
+		if resp, ok := pendingComm(comando, mesOb, msg, name, fromID); ok {
 			msg = resp
 		} else if msg, ok = specialComm(comando, fromID, msg); ok {
 		} else {
@@ -208,7 +216,7 @@ func telegramMessage(toID int64, message string) tgbotapi.MessageConfig {
 	return msg
 }
 
-func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, fromID string) (tgbotapi.MessageConfig, bool) {
+func pendingComm(comando string, mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, fromID string) (tgbotapi.MessageConfig, bool) {
 	var (
 		ok bool
 	)
@@ -218,7 +226,7 @@ func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, 
 		case "starting":
 			ok = true // si era pendiente
 			// Check Client
-			err := newOrganizer(fromID, mesOb.Text, name)
+			err := newOrganizer(fromID, comando, name)
 			if err != nil {
 				strerr := "failed newOrganizer()"
 				logError(strerr, err)
@@ -229,11 +237,11 @@ func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, 
 			}
 		case "new_game":
 			ok = true // si era pendiente
-			if mesOb.Text == "" {
+			if comando == "" {
 				logError("missing new_game's name", nil)
 			}
 			game := new(BingoGame)
-			game.Name = mesOb.Text
+			game.Name = comando
 			err := game.guardar()
 			if err != nil {
 				strerr := "failed game.guardar()"
@@ -245,11 +253,19 @@ func pendingComm(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name, 
 			}
 		case "check_game":
 			ok = true // si era pendiente
-			if mesOb.Text == "" {
+			if comando == "" {
 				logError("missing board id", nil)
 				respmsg.Text = "falta el id del tablero"
 			} else {
-				respmsg = cmdCheckBoard(respmsg, fromID, mesOb.Text)
+				respmsg = cmdCheckBoard(respmsg, fromID, comando)
+			}
+		case "change_mode":
+			ok = true // si era pendiente
+			if comando == "" {
+				logError("missing game mode", nil)
+				respmsg.Text = "a que modo?"
+			} else {
+				respmsg = cmdChangeMode(comando, respmsg, fromID)
 			}
 		}
 	}
@@ -303,7 +319,7 @@ func specialComm(command, fromID string, msg tgbotapi.MessageConfig) (tgbotapi.M
 
 			case "board_new":
 				// Generate (Sell) Board
-				msg, err = cmdBoardNew(fromID, rs[1], msg)
+				msg, err = cmdBoardNew(fromID, rs[1], msg, "out.png")
 				if err != nil {
 					msg.Text = errorOccurred + randomGif("fail")
 					return msg, true
