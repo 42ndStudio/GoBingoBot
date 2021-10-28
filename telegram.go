@@ -76,6 +76,13 @@ func randomGif(ident string) string {
 
 func runTelegramUpdater() {
 	print("telegram updater starting o.O ")
+	time.Sleep(time.Millisecond * 2000)
+
+	// Hard-code generate boards on start
+	// for i := 0; i < 500; i++ {
+	// 	cmdBoardNew(se.masterID, "VFNFTOPSNWUB3468NIL04", tgbotapi.MessageConfig{}, strconv.Itoa(i+1)+".png")
+	// }
+
 	var err error
 	se.bot, err = tgbotapi.NewBotAPI(os.Getenv("TG_KEY"))
 	if err != nil {

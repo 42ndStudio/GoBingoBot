@@ -14,6 +14,7 @@ import (
 )
 
 const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const BOARD_HAS_CENTER = false
 
 func logError(msg string, err error) {
 	strerr := ""

@@ -14,6 +14,8 @@ import (
 
 var boardIDMode = "int"
 
+const ONLINE = false
+
 func cmdGameDetails(fromID, gameID string, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
 	fmt.Println(gameID)
 	log.Println("Detalles de juego", gameID, "solicitados")
@@ -47,7 +49,7 @@ func cmdGameDetails(fromID, gameID string, msg tgbotapi.MessageConfig) (tgbotapi
 
 func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig, outName string) (tgbotapi.MessageConfig, error) {
 	fmt.Println(gameID)
-	log.Println("Nuevo tablero de juego", gameID, "solicitado")
+	log.Println("Nuevo tablero de juego", gameID, "solicitado por", fromID)
 	game, organizer, err := getGameNOrganizer(fromID, gameID)
 	if err != nil {
 		strerr := fmt.Sprintf("failed loading game (%s) and organizer (TG %s) from id for details", gameID, fromID)
@@ -95,17 +97,19 @@ func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig, outName stri
 			return
 		}
 
-		imsg := tgbotapi.NewPhotoUpload(msg.ChatID, outName)
-		imsg.Caption = board.BoardID
+		if ONLINE {
+			imsg := tgbotapi.NewPhotoUpload(msg.ChatID, outName)
+			imsg.Caption = board.BoardID
 
-		se.bot.Send(imsg)
+			se.bot.Send(imsg)
 
-		go func() {
-			msg, err = cmdGameDetails(fromID, game.BingoID, msg)
-			if err == nil {
-				se.bot.Send(msg)
-			}
-		}()
+			go func() {
+				msg, err = cmdGameDetails(fromID, game.BingoID, msg)
+				if err == nil {
+					se.bot.Send(msg)
+				}
+			}()
+		}
 	}()
 
 	msg.Text = "cargando..."
@@ -396,8 +400,8 @@ func cmdGenerateBoards(respmsg tgbotapi.MessageConfig, fromID string) tgbotapi.M
 		return respmsg
 	}
 
-	for i := 0; i < 700; i++ {
-		respmsg, err = cmdBoardNew(fromID, game.BingoID, respmsg, strconv.Itoa(i)+".png")
+	for i := 0; i < 500; i++ {
+		respmsg, err = cmdBoardNew(fromID, game.BingoID, respmsg, strconv.Itoa(i+1)+".png")
 		if err != nil {
 			respmsg.Text = errorOccurred + randomGif("fail")
 		}
