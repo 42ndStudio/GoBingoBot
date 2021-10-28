@@ -46,7 +46,7 @@ func (board *BingoBoard) loadSlots() error {
 }
 
 // generateSlot genera un slot del tablero de juego
-func (board *BingoBoard) generateSlot(x, y int) (string, error) {
+func (board *BingoBoard) generateSlot(x, y int, marked bool) (string, error) {
 	var (
 		slot        BingoSlot
 		printedNums []int
@@ -56,6 +56,7 @@ func (board *BingoBoard) generateSlot(x, y int) (string, error) {
 	println("generating slot letter:", letters[x])
 	slot.BoardID = board.BoardID
 	slot.Letter = letters[x]
+	slot.Marked = marked
 
 	println("loaded slots: ", len(board.slots))
 
@@ -116,7 +117,7 @@ func (board *BingoBoard) generate(game *BingoGame) error {
 		strSlots := ""
 		for l := 0; l < 5; l++ {
 			for r := 0; r < 5; r++ {
-				str, err := board.generateSlot(l, r)
+				str, err := board.generateSlot(l, r, !BOARD_HAS_CENTER && l == 2 && r == 2)
 				if err != nil {
 					strerr := fmt.Sprintf("failed generating slot %d %d", l, r)
 					logError(strerr, err)
@@ -165,7 +166,11 @@ func (board *BingoBoard) generate(game *BingoGame) error {
 
 // clearSlots desmarca todas las casillas del tablero
 func (board *BingoBoard) clearSlots() error {
-	return se.db.Table("bingo_slots").Where("board_id = ?", board.BoardID).Update("marked", false).Error
+	var err = se.db.Table("bingo_slots").Where("board_id = ?", board.BoardID).Update("marked", false).Error
+	if !BOARD_HAS_CENTER {
+		se.db.Table("bingo_slots").Where("board_id = ? AND letter = 'N' AND y = 2", board.BoardID).Update("marked", true)
+	}
+	return err
 }
 
 // deleteSlots elimina las casillas
@@ -227,7 +232,7 @@ func (board *BingoBoard) drawImage(outName string) error {
 		panic(err)
 	}
 
-	dc.DrawStringAnchored(fmt.Sprint(board.ID), 235, 64, 0.5, 0.5)
+	dc.DrawStringAnchored(fmt.Sprint(board.ID), 215, 190, 0.5, 0.5)
 
 	dc.SetRGB(0, 0, 0)
 	if err := dc.LoadFontFace("moon_get-Heavy.ttf", 96); err != nil {
@@ -235,10 +240,10 @@ func (board *BingoBoard) drawImage(outName string) error {
 	}
 
 	var (
-		baseH float64 = 542
-		baseW float64 = 330
-		difH  float64 = 297
-		difW  float64 = 377
+		baseH float64 = 620
+		baseW float64 = 560
+		difH  float64 = 252
+		difW  float64 = 252
 	)
 
 	rows := make(map[int][]int, 5)
@@ -249,7 +254,9 @@ func (board *BingoBoard) drawImage(outName string) error {
 
 	for x := 0; x < 5; x++ {
 		for y := 0; y < 5; y++ {
-			dc.DrawStringAnchored(strconv.Itoa(rows[x][y]), baseW+(difW*float64(x)), baseH+(difH*float64(y)), 0.5, 0.5)
+			if !(x == 2 && y == 2) || BOARD_HAS_CENTER {
+				dc.DrawStringAnchored(strconv.Itoa(rows[x][y]), baseW+(difW*float64(x)), baseH+(difH*float64(y)), 0.5, 0.5)
+			}
 		}
 	}
 
