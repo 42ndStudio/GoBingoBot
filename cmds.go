@@ -14,7 +14,7 @@ import (
 
 var boardIDMode = "int"
 
-const ONLINE = false
+const ONLINE = true
 
 func cmdGameDetails(fromID, gameID string, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
 	fmt.Println(gameID)
@@ -113,11 +113,11 @@ func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig, outName stri
 	}()
 
 	msg.Text = "cargando..."
-	//if err != nil {
-	//	strerr := fmt.Sprintf("failed printing text board (%s) for game (%s)", board.BoardID, gameID)
-	//	logError(strerr, err)
-	//	return msg, errors.New(strerr)
-	//}
+	// if err != nil {
+	// 	strerr := fmt.Sprintf("failed printing text board (%s) for game (%s)", board.BoardID, gameID)
+	// 	logError(strerr, err)
+	// 	return msg, errors.New(strerr)
+	// }
 
 	return msg, nil
 }

@@ -34,7 +34,7 @@ func main() {
 		panic("Missing env['master_id']")
 	}
 
-	go startDB()
+	go startSQLLiteDB()
 	go runTelegramUpdater()
 
 	select {}
