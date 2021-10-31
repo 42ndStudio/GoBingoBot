@@ -1,5 +1,7 @@
-// 42nd Studio @2020
-// MuchLove
+// With love
+// 42nd Studio
+// 2020-2021
+
 package main
 
 import (
@@ -35,6 +37,7 @@ func main() {
 	}
 
 	go startSQLLiteDB()
+	go runWebServer()
 	go runTelegramUpdater()
 
 	select {}

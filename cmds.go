@@ -58,15 +58,7 @@ func cmdBoardNew(fromID, gameID string, msg tgbotapi.MessageConfig, outName stri
 	}
 
 	var board BingoBoard
-	board.BingoID = game.BingoID
-	board.Sold = true
-	err = board.guardar()
-	if err != nil {
-		strerr := fmt.Sprintf("failed saving board for game (%s)", gameID)
-		logError(strerr, err)
-		return msg, errors.New(strerr)
-	}
-	err = board.generate(game)
+	board, err = game.generateBoard()
 	if err != nil {
 		strerr := fmt.Sprintf("failed generating board for game (%s)", gameID)
 		logError(strerr, err)

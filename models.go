@@ -1,7 +1,7 @@
 // Copyright 2020
-// All Rights Reserved
-// MuchLove
-// 42nd Studio Team
+// With love
+// 42nd Studio
+// 2020-2021
 
 package main
 
@@ -24,6 +24,7 @@ type BingoGame struct {
 	Playing             bool         `gorm:"null"`
 	DrawnBalots         string       `gorm:"null"`
 	UniqueBoards        bool         `gorm:"null"` //If true, there will be no repeated boards
+	IdentifierType      string       `gorm:"null"` // str vs num
 	boards              []BingoBoard `gorm:"-"`
 }
 
