@@ -249,15 +249,27 @@ func pendingComm(comando string, mesOb *tgbotapi.Message, respmsg tgbotapi.Messa
 			}
 			game := new(BingoGame)
 			game.Name = comando
+
 			err := game.guardar()
 			if err != nil {
 				strerr := "failed game.guardar()"
 				logError(strerr, err)
 			} else {
-				respmsg.Text = fmt.Sprintf("Juego %s creado", game.BingoID)
-				respmsg.ReplyMarkup = masterKeyboard
-				delete(waitingon, fromID)
+				organizer := new(BingoOrganizer)
+				organizer.TelegramID = fromID
+				organizer.BingoID = game.BingoID
+
+				err = organizer.guardar()
+				if err != nil {
+					strerr := "failed organizer.guardar()"
+					logError(strerr, err)
+				} else {
+					respmsg.Text = fmt.Sprintf("Juego %s creado", game.BingoID)
+					respmsg.ReplyMarkup = masterKeyboard
+					delete(waitingon, fromID)
+				}
 			}
+
 		case "check_game":
 			ok = true // si era pendiente
 			if comando == "" {

@@ -31,14 +31,17 @@ Features | Funciones:
 ## Font
 [MoonGet](https://www.dafont.com/moon-get.font)
 
+Important: because we use a CGO enabled package, we are required to set the environment variable CGO_ENABLED=1 and have a gcc compile present within your path.
 ## Run
 ```bash
+export CGO_ENABLED=1
 export DB_HOST=localhost
 export DB_PORT=3306
 export DB_NAME=gobingobot
 export DB_USER=bingopher
 export DB_PASS=secreto
-export TG_KEY=secreto
-export MASTER_ID=master_telegram_user_id  #MASTER_ID is the manager's TelegramID
+export TG_KEY="1295700987:AAG2Mr6Z77enrTCUMBZ7oNdPV-QBpqE2DJw"
+export MASTER_ID=596025632  #MASTER_ID is the manager's TelegramID
 go run . 
 ```
+

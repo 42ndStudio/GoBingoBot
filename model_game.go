@@ -39,7 +39,7 @@ func (game *BingoGame) guardar() error {
 
 func (game *BingoGame) loadFromID(bingoID string) error {
 	fmt.Println("loading game", bingoID)
-	err := se.db.Where("bingo_id = ?", bingoID).First(&game).Error
+	err := se.db.Where("bingo_id = ?", strings.ToUpper(bingoID)).First(&game).Error
 	return err
 }
 
