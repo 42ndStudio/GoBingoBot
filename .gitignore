@@ -2,3 +2,4 @@ MyReadme.md
 vendor/
 nuxt_modules/
 .electron-nuxt/
+gobingo.db

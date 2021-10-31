@@ -9,7 +9,6 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
-	go.uber.org/zap v1.16.0
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect
-	gorm.io/driver/sqlite v1.2.3
+	gorm.io/gorm v1.22.0
 )

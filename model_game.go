@@ -1,10 +1,13 @@
-// 42nd Studio @2020
-// MuchLove
+// With love
+// 42nd Studio
+// 2020-2021
+
 package main
 
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -38,8 +41,9 @@ func (game *BingoGame) guardar() error {
 }
 
 func (game *BingoGame) loadFromID(bingoID string) error {
+	bingoID = strings.ToUpper(bingoID)
 	fmt.Println("loading game", bingoID)
-	err := se.db.Where("bingo_id = ?", strings.ToUpper(bingoID)).First(&game).Error
+	err := se.db.Where("bingo_id = ?", bingoID).First(&game).Error
 	return err
 }
 
@@ -85,6 +89,38 @@ func (game *BingoGame) isUnique(hash string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func (game *BingoGame) generateBoard() (BingoBoard, error) {
+	var board BingoBoard
+	board.BingoID = game.BingoID
+	board.Sold = true
+
+	if game.IdentifierType == "num" {
+		board.BoardID = strconv.Itoa(game.BoardsSold + 1)
+	}
+
+	err := board.guardar()
+	if err != nil {
+		strerr := fmt.Sprintf("failed saving board for game (%s)", game.BingoID)
+		logError(strerr, err)
+		return board, errors.New(strerr)
+	}
+	err = board.generate(game)
+	if err != nil {
+		strerr := fmt.Sprintf("failed generating board for game (%s)", game.BingoID)
+		logError(strerr, err)
+		return board, errors.New(strerr)
+	}
+
+	err = game.guardar()
+	if err != nil {
+		strerr := "failed saving game @game.generateBoard"
+		logError(strerr, err)
+		return board, errors.New(strerr)
+	}
+
+	return board, err
 }
 
 // drawBalot registra una balota sacada
