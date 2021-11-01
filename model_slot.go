@@ -22,7 +22,7 @@ func (slot *BingoSlot) guardar() error {
 	return nil
 }
 
-func (slot *BingoSlot) loadFromBoard(boardID, letter string, number int) error {
-	err := se.db.Where("board_id = ? AND letter = ? AND number = ?", boardID, letter, number).First(&slot).Error
+func (slot *BingoSlot) loadFromBoard(bingoID, boardID, letter string, number int) error {
+	err := se.db.Where("bingo_id = ? AND board_id = ? AND letter = ? AND number = ?", bingoID, boardID, letter, number).First(&slot).Error
 	return err
 }

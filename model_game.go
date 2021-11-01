@@ -21,7 +21,7 @@ func (game *BingoGame) guardar() error {
 	if game.Password == "" {
 		game.Password, err = GenerateRandomString(8)
 		if err != nil {
-
+			logError("error generating game password", err)
 		}
 	}
 	// Crear o Actualizar
@@ -112,6 +112,7 @@ func (game *BingoGame) generateBoard() (BingoBoard, error) {
 		logError(strerr, err)
 		return board, errors.New(strerr)
 	}
+	game.BoardsSold += 1
 
 	err = game.guardar()
 	if err != nil {
@@ -128,6 +129,7 @@ func (game *BingoGame) generateBoard() (BingoBoard, error) {
 func (game *BingoGame) drawBalot(letter, number string) (int, error) {
 	winners := 0
 
+	println("drawing balot game:", game.BingoID, "balot:", letter, number)
 	if stringInSlice(letter+number, strings.Split(game.DrawnBalots, ",")) {
 		strerr := fmt.Sprintf("already drawn (%s %s)", letter, number)
 		logError(strerr, nil)
@@ -172,4 +174,33 @@ func (game *BingoGame) drawBalot(letter, number string) (int, error) {
 	}
 
 	return winners, err
+}
+
+// drawBalot registra una balota sacada
+// marca los tableros que lo tienen
+func (game *BingoGame) clearSlots() (string, error) {
+
+	ogdrawn := game.DrawnBalots
+	game.DrawnBalots = ""
+	game.Playing = true
+
+	err := game.guardar()
+	if err != nil {
+		strerr := fmt.Sprintf("failed saving game.started %s", game.BingoID)
+		logError(strerr, err)
+		return ogdrawn, err
+	}
+
+	err = game.loadBoards()
+	if err != nil {
+		strerr := fmt.Sprintf("failed loading game (%s) boards", game.BingoID)
+		logError(strerr, err)
+		return ogdrawn, err
+	}
+
+	for _, board := range game.boards {
+		board.clearSlots()
+	}
+
+	return ogdrawn, nil
 }

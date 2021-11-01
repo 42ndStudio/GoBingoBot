@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 
@@ -30,13 +31,13 @@ func (board *BingoBoard) guardar() error {
 	return nil
 }
 
-func (board *BingoBoard) loadFromID(boardID string) error {
-	return se.db.Where("board_id = ?", boardID).First(&board).Error
+func (board *BingoBoard) loadFromID(bingoID, boardID string) error {
+	return se.db.Where("bingo_id = ? AND board_id = ?", bingoID, boardID).First(&board).Error
 }
 
 // loadSlots carga las casillas del juego
 func (board *BingoBoard) loadSlots() error {
-	err := se.db.Where("board_id = ?", board.BoardID).Find(&board.slots).Error
+	err := se.db.Where("bingo_id = ? AND board_id = ?", board.BingoID, board.BoardID).Find(&board.slots).Error
 	if err != nil {
 		strerr := "error cargando slots de tablero"
 		logError(strerr, err)
@@ -54,6 +55,7 @@ func (board *BingoBoard) generateSlot(x, y int, marked bool) (string, error) {
 	)
 
 	println("generating slot letter:", letters[x])
+	slot.BingoID = board.BingoID
 	slot.BoardID = board.BoardID
 	slot.Letter = letters[x]
 	slot.Marked = marked
@@ -166,9 +168,9 @@ func (board *BingoBoard) generate(game *BingoGame) error {
 
 // clearSlots desmarca todas las casillas del tablero
 func (board *BingoBoard) clearSlots() error {
-	var err = se.db.Table("bingo_slots").Where("board_id = ?", board.BoardID).Update("marked", false).Error
+	var err = se.db.Table("bingo_slots").Where("bingo_id = ? AND board_id = ?", board.BingoID, board.BoardID).Update("marked", false).Error
 	if !BOARD_HAS_CENTER {
-		se.db.Table("bingo_slots").Where("board_id = ? AND letter = 'N' AND y = 2", board.BoardID).Update("marked", true)
+		se.db.Table("bingo_slots").Where("bingo_id = ? AND board_id = ? AND letter = 'N' AND y = 2", board.BingoID, board.BoardID).Update("marked", true)
 	}
 	return err
 }
@@ -176,7 +178,7 @@ func (board *BingoBoard) clearSlots() error {
 // deleteSlots elimina las casillas
 func (board *BingoBoard) deleteSlots() error {
 	board.slots = []BingoSlot{}
-	return se.db.Where("board_id = ?", board.BoardID).Delete(&BingoSlot{}).Error
+	return se.db.Where("bingo_id = ? AND board_id = ?", board.BingoID, board.BoardID).Delete(&BingoSlot{}).Error
 }
 
 // printText devuelve el tablero impreso en texto
@@ -260,8 +262,22 @@ func (board *BingoBoard) drawImage(outName string) error {
 		}
 	}
 
+	outPath := "tableros/" + board.BingoID
+	exists, err := pathExists(outPath)
+	if err != nil {
+		logError("failed checking directory "+outPath+" for drawn board", err)
+	}
+	if !exists {
+		err := os.Mkdir(outPath, 0755)
+		if err != nil {
+			logError("failed creating directory "+outPath+" for drawn board", err)
+		}
+	}
+
 	dc.Clip()
-	dc.SavePNG(outName)
+	dc.SavePNG(outPath + "/" + outName)
+
+	fmt.Println("board file saved", outName)
 	return nil
 }
 
@@ -340,6 +356,26 @@ func (board *BingoBoard) markSlots(letter, number, dinamica string) (bool, error
 	println(fmt.Sprintf("need %d have %d", needTogether, haveInPlace))
 	if haveInPlace >= needTogether {
 		winner = true
+	}
+
+	return winner, nil
+}
+
+// markSlot marca una casilla (si la tiene)
+// retorna si es ganador de la actual dinamica
+func (board *BingoBoard) markNCheck(drawn string, dinamica string) (bool, error) {
+	var err error
+
+	drawnList := strings.Split(drawn, ",")
+
+	var winner bool
+	for _, draw := range drawnList {
+		winner, err = board.markSlots(string(draw[0]), string(draw[1:]), dinamica)
+		if err != nil {
+			strerr := fmt.Sprintf("failed checking board (%s) at game (%s)", board.BoardID, board.BingoID)
+			logError(strerr, err)
+			return winner, err
+		}
 	}
 
 	return winner, nil

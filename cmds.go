@@ -147,25 +147,10 @@ func cmdStartGame(mesOb *tgbotapi.Message, respmsg tgbotapi.MessageConfig, name,
 		return respmsg
 	}
 
-	ogdrawn := game.DrawnBalots
-	game.DrawnBalots = ""
-	game.Playing = true
-	err = game.guardar()
+	ogdrawn, err := game.clearSlots()
 	if err != nil {
-		strerr := fmt.Sprintf("failed saving game.started %s", game.BingoID)
-		logError(strerr, err)
+		logError("failed clearing game slots", err)
 		return respmsg
-	}
-
-	err = game.loadBoards()
-	if err != nil {
-		strerr := fmt.Sprintf("failed loading game (%s) boards", game.BingoID)
-		logError(strerr, err)
-		return respmsg
-	}
-
-	for _, board := range game.boards {
-		board.clearSlots()
 	}
 
 	delete(waitingon, fromID)
@@ -277,16 +262,11 @@ func cmdCheckBoard(respmsg tgbotapi.MessageConfig, fromID, boardID string) tgbot
 		}
 	}
 
-	drawn := strings.Split(game.DrawnBalots, ",")
-
-	var winner bool
-	for _, draw := range drawn {
-		winner, err = board.markSlots(string(draw[0]), string(draw[1:]), game.CurrentMode)
-		if err != nil {
-			strerr := fmt.Sprintf("failed checking board (%s) at game (%s)", board.BoardID, game.BingoID)
-			logError(strerr, err)
-			return respmsg
-		}
+	winner, err := board.markNCheck(game.DrawnBalots, game.CurrentMode)
+	if err != nil {
+		strerr := fmt.Sprintf("failed board %s markNCheck", boardID)
+		logError(strerr, err)
+		return respmsg
 	}
 
 	if winner {
@@ -359,12 +339,10 @@ func cmdChangeMode(gameMode string, respmsg tgbotapi.MessageConfig, fromID strin
 		return respmsg
 	}
 
-	modes := []string{"lb", "li", "ln", "lg", "lo", "a", "c", "o", "n", "/", "\\", "l1", "l2", "l3", "l4", "l5"}
-
 	println("changing to mode " + gameMode)
-	println(fmt.Sprint(modes))
+	println(fmt.Sprint(GAME_MODES))
 
-	if stringInSlice(gameMode, modes) {
+	if stringInSlice(gameMode, GAME_MODES) {
 		respmsg.Text = "Modo de juego cambio a: " + gameMode
 		game.CurrentMode = gameMode
 		err = game.guardar()

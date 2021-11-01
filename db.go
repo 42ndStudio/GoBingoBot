@@ -35,7 +35,7 @@ func (Product) TableName() string {
 
 func startSQLLiteDB() {
 	var err error
-	se.db, err = gorm.Open("sqlite3", "gobingo.db")
+	se.db, err = gorm.Open("sqlite3", "bingo.db")
 	if err != nil {
 		panic("failed to connect database")
 	}

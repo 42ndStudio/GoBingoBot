@@ -14,6 +14,9 @@ import (
 )
 
 const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+var GAME_MODES = []string{"lb", "li", "ln", "lg", "lo", "a", "c", "o", "n", "/", "\\", "l1", "l2", "l3", "l4", "l5"}
+
 const BOARD_HAS_CENTER = false
 
 func logError(msg string, err error) {
@@ -209,4 +212,16 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+// pathExists returns whether the given file or directory exists
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }

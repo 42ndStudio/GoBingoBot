@@ -1,14 +1,18 @@
 import axios from 'axios'
 
-export default {
-    static SERVER_ADDR = 'localhost:8042';
+export const SERVER_ADDR = 'http://127.0.0.1:8042';
 
+export default {
     async api_post(req_type, data) {
-        let req_addr = this.SERVER_ADDR;
+        let req_addr = SERVER_ADDR+ '/';
         return new Promise(resolve => {
             switch (req_type) {
                 case 'game/new':
                     req_addr += `games/new/`
+                    break;
+
+                case "game/generate": 
+                    req_addr += `games/boards/generate/`
                     break;
 
                 default:
@@ -28,18 +32,21 @@ export default {
     },
 
     async api_get(req_type, id, query) {
+        console.log('api_get', req_type);
         return new Promise((resolve) => {
-            if (!id) {
-                throw (`api_get: missing id ${req_type}`)
-            }
             let rObj = {}
-            let req_addr = dirapi
+            let req_addr = SERVER_ADDR+ '/';
             switch (req_type) {
+                case 'games':
+                    req_addr += `games/`
+                    break;
                 case 'game':
-                    req_addr += `games/${id}/`
+                    req_addr += `games/?gid=${id}`
                     break;
                 default:
-                    throw ("api_get invalid req_type " + req_type)
+                    errmsg = "api_get invalid req_type " + req_type
+                    console.error(errmsg);
+                    throw (errmsg)
             }
 
             if (query && query != '') {
@@ -61,7 +68,7 @@ export default {
 
     async api_delete(req_type, id, data = {}) {
         return new Promise(resolve => {
-            let req_addr = this.SERVER_ADDR
+            let req_addr = SERVER_ADDR+ '/';
             switch (tipo) {
                 case 'game':
                     req_addr += `/games/${id}/`
