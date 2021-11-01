@@ -18,8 +18,7 @@ module.exports = {
   loading: false,
   plugins: [
     { ssr: true, src: '@/plugins/icons.js' },
-
-
+    '~plugins/helpers.js'
   ],
   buildModules: [
 

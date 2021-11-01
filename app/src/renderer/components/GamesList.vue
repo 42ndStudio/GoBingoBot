@@ -14,7 +14,7 @@
     <v-card-text>
       <v-list two-line>
         <template v-for="game in games">
-          <v-list-item :key="'item' + game.BingoID" :to="'/bingo/' + game.BingoID">
+          <v-list-item v-if="game && game.BingoID" :key="'game' + game.BingoID" :to="'/bingo/' + game.BingoID">
             <v-list-item-content>
               <v-list-item-title>{{ game.Name }}</v-list-item-title>
               <v-list-item-subtitle

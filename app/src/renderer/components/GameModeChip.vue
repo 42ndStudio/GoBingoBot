@@ -11,8 +11,8 @@ export default {
   },
   computed: {
     currentModeComp() {
-      if (!this.currentMode) {
-        return "N/A", "red";
+      if (!this.currentMode || this.currentMode == '') {
+        return ["N/A", "red", "white--text"];
       }
       switch (this.currentMode) {
         case "a":
@@ -38,7 +38,7 @@ export default {
           return ["Fila " + this.currentMode[1], "purple", "white--text"];
         }
       }
-      return [cm, "red", "white--text"];
+      return [this.currentMode, "red", "white--text"];
     },
   },
 };

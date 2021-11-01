@@ -4,15 +4,27 @@ export const SERVER_ADDR = 'http://127.0.0.1:8042';
 
 export default {
     async api_post(req_type, data) {
-        let req_addr = SERVER_ADDR+ '/';
+        let req_addr = SERVER_ADDR + '/';
         return new Promise(resolve => {
             switch (req_type) {
                 case 'game/new':
                     req_addr += `games/new/`
                     break;
 
-                case "game/generate": 
+                case "game/generate":
                     req_addr += `games/boards/generate/`
+                    break;
+
+                case "game/setmode":
+                    req_addr += `games/setmode/`
+                    break;
+
+                case "game/drawbalot":
+                    req_addr += "games/drawbalot/"
+                    break;
+
+                case "game/check":
+                    req_addr += "games/boards/check/"
                     break;
 
                 default:
@@ -21,6 +33,7 @@ export default {
 
             axios.post(req_addr, data)
                 .then(response => {
+                    console.log('got resp', response);
                     resolve(response.data);
                 })
                 .catch(error => {
@@ -35,7 +48,7 @@ export default {
         console.log('api_get', req_type);
         return new Promise((resolve) => {
             let rObj = {}
-            let req_addr = SERVER_ADDR+ '/';
+            let req_addr = SERVER_ADDR + '/';
             switch (req_type) {
                 case 'games':
                     req_addr += `games/`
@@ -68,7 +81,7 @@ export default {
 
     async api_delete(req_type, id, data = {}) {
         return new Promise(resolve => {
-            let req_addr = SERVER_ADDR+ '/';
+            let req_addr = SERVER_ADDR + '/';
             switch (tipo) {
                 case 'game':
                     req_addr += `/games/${id}/`

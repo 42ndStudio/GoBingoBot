@@ -272,9 +272,30 @@ func handleGameSetMode(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		fmt.Println("handleGameSetMode", game.BingoID, reqInput.Param)
+
 		// Set Mode
 		// Its a different game mode
-		if reqInput.Param == "CLEAR_BALOTS" {
+		if reqInput.Param == "PLAY" || reqInput.Param == "STOP" {
+			game.Playing = reqInput.Param == "PLAY"
+			err = game.guardar()
+			if err != nil {
+				strerr := fmt.Sprintf("failed saving game (%s) as playing = %v  @handleGameSetMode", reqInput.BingoID, reqInput.Param == "PLAY")
+				logError(strerr, err)
+				http.Error(w, RESP_ERROR, http.StatusBadRequest)
+				mutex.Unlock()
+				return
+			}
+			fmt.Println("game ", game.BingoID, "saved as playing = ", reqInput.Param == "PLAY")
+			msg := "Playing"
+			if !game.Playing {
+				msg = "Not Playing"
+			}
+			resp = ResponseStd{
+				Status:  "OK",
+				Message: msg,
+			}
+		} else if reqInput.Param == "CLEAR_BALOTS" {
 			ogdrawn, err := game.clearSlots()
 			if err != nil {
 				strerr := fmt.Sprintf("failed clearing game (%s) slots  @handleGameSetMode", reqInput.BingoID)
@@ -352,6 +373,15 @@ func handleDrawBalot(w http.ResponseWriter, r *http.Request) {
 			mutex.Unlock()
 			return
 		}
+
+		resp := ResponseStd{
+			Status:  "OK",
+			Message: reqInput.Balot,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 
 	}
 

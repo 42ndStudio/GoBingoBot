@@ -4,3 +4,4 @@ nuxt_modules/
 .electron-nuxt/
 bingo.db
 tableros/
+.DS_STORE
