@@ -10,11 +10,42 @@
               <b>Tableros: {{ bingo.BoardsSold }}</b
               ><br />
               <b
-                >Modo de Juego: {{ bingo.CurrentMode }}
+                >Modo de Juego: 
                 <GameModeChip :currentMode="bingo.CurrentMode" /></b
               ><br />
               <v-row class="mt-4">
-                <v-col cols="4">
+                <v-col cols="3">
+                  <v-btn
+                    color="blue accent-2 white--text"
+                    @click="reqGenerateBoard"
+                    small
+                    block
+                  >
+                    Generar
+                  </v-btn>
+                </v-col>
+                <v-col cols="3">
+                  <v-btn
+                    color="blue accent-2 white--text"
+                    @click="reqCheckBoard(false)"
+                    small
+                    block
+                  >
+                    <v-icon class="mr-2" small>mdi-check-circle</v-icon>
+                    Verificar
+                  </v-btn>
+                </v-col>
+                <v-col cols="3">
+                  <v-btn
+                    color="orange darken-4 white--text"
+                    @click="reqClearBoard"
+                    small
+                    block
+                  >
+                    <v-icon small class="mr-2">mdi-refresh</v-icon> Limpiar
+                  </v-btn>
+                </v-col>
+                <v-col cols="3">
                   <v-btn
                     :class="
                       !bingo.Playing
@@ -33,33 +64,11 @@
                     </template>
                   </v-btn>
                 </v-col>
-                <v-col cols="4">
-                  <v-btn
-                    color="blue accent-2 white--text"
-                    @click="reqGenerateBoard"
-                    small
-                    block
-                  >
-                    Generar Tablero
-                  </v-btn>
-                </v-col>
-                <v-col cols="4">
-                  <v-btn
-                    color="blue accent-2 white--text"
-                    @click="reqCheckBoard(false)"
-                    small
-                    block
-                  >
-                    <v-icon class="mr-2" small>mdi-check-circle</v-icon>
-                    Verificar Tablero
-                  </v-btn>
-                </v-col>
               </v-row>
             </v-card-text>
           </v-card>
         </v-col>
       </v-row>
-      bingo.playing: {{ bingo.Playing }}
       <transition name="slide-fade">
         <v-card v-if="bingo && bingo.Playing">
           <v-card-title> Jugando {{ bingo.Name }} </v-card-title>
@@ -82,6 +91,7 @@
             </v-row>
             <v-row justify="center">
               <v-col cols="4">
+                <p class="label text-center mb-1">Modo de Juego:</p>
                 <v-select
                   label="game_mode"
                   solo
@@ -168,13 +178,17 @@
         </v-card>
       </transition>
       <v-dialog v-model="dialog_check" max-width="420">
-        <v-card>
-          <v-card-title class="text-h5"> Verificar tablero </v-card-title>
+        <v-card min-height="333">
+          <v-card-title class="text-h5 mb-2"> Verificar tablero </v-card-title>
           <v-card-subtitle>
             Modo de Juego: <GameModeChip :currentMode="bingo.CurrentMode" />
           </v-card-subtitle>
-          <v-card-text class="text-center">
-            <v-row v-if="!dialog_check_mode" align="center">
+          <v-card-text class="text-center" style="height: 200px">
+            <v-row
+              v-if="!dialog_check_mode"
+              align="center"
+              style="height: 200px"
+            >
               <v-col cols="8">
                 <v-text-field
                   label="Tablero"
@@ -193,12 +207,22 @@
                 >
               </v-col>
             </v-row>
-
-            <v-circular-progress
-              v-if="dialog_check_mode == 'loading'"
+            <div v-else-if="['winner', 'loser'].includes(dialog_check_mode)">
+              <template v-if="dialog_check_mode == 'winner'">
+                <p class="mt-5">Tablero: {{ checkBoardId }}</p>
+                <p class="display-1 green--text text--darken-3">Ganador</p>
+              </template>
+              <template v-else>
+                <p class="mt-5">Tablero: {{ checkBoardId }}</p>
+                <p class="display-1 red--text text--darken-3">Perdedor</p>
+              </template>
+              <v-btn @click="dialog_check_mode = false">Validar otro</v-btn>
+            </div>
+            <v-progress-circular
+              v-else-if="dialog_check_mode == 'loading'"
               intermitent
             >
-            </v-circular-progress>
+            </v-progress-circular>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -335,6 +359,27 @@ export default {
         console.error("failed getting games", error);
       }
     },
+    reqClearBoard() {
+      if (confirm("seguro quieres limpiar las balotas?")) {
+        console.log("reqClearBoard");
+        try {
+          local_api
+            .api_post("game/setmode", {
+              BingoID: this.$route.params["identifier"],
+              Param: "CLEAR_BALOTS",
+            })
+            .then((respuesta) => {
+              console.log(respuesta);
+              if (respuesta.Status == "OK") {
+                alert("Balotas registradas: \n"+respuesta.Message)
+                this.bingo.DrawnBalots = "";
+              }
+            });
+        } catch (error) {
+          console.error("failed getting games", error);
+        }
+      }
+    },
     reqDrawBalot() {
       let balot = this.drawBalot;
       console.log("reqDrawBalot", balot);
@@ -367,7 +412,7 @@ export default {
         this.dialog_check = true;
         return;
       }
-      this.dialog_check_mode == "loading";
+      this.dialog_check_mode = "loading";
       try {
         local_api
           .api_post("game/check", {
@@ -376,15 +421,10 @@ export default {
           })
           .then((respuesta) => {
             console.log(respuesta);
-            if (respuesta.Status == "OK") {
-              console.log("appending", respuesta.Message);
-              if (this.bingo.DrawnBalots == "") {
-                this.bingo.DrawnBalots = respuesta.Message;
-              } else {
-                this.bingo.DrawnBalots += "," + respuesta.Message;
-              }
-
-              console.log(this.drawnBalots);
+            if (respuesta.Winner === true) {
+              this.dialog_check_mode = "winner";
+            } else {
+              this.dialog_check_mode = "loser";
             }
           });
       } catch (error) {
