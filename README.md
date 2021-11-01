@@ -34,14 +34,18 @@ Features | Funciones:
 Important: because we use a CGO enabled package, we are required to set the environment variable CGO_ENABLED=1 and have a gcc compile present within your path.
 ## Run
 ```bash
-export CGO_ENABLED=1
+# If using a MySQL DB (TODO (for now using only sqlite))
 export DB_HOST=localhost
 export DB_PORT=3306
 export DB_NAME=gobingobot
 export DB_USER=bingopher
 export DB_PASS=secreto
+
+# If you want to run a Telegram Bingo Bot
 export TG_KEY="1295700987:AAG2Mr6Z77enrTCUMBZ7oNdPV-QBpqE2DJw"
 export MASTER_ID=596025632  #MASTER_ID is the manager's TelegramID
+
+export CGO_ENABLED=1
 go run . 
 ```
 

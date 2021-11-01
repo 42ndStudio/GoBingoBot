@@ -14,11 +14,11 @@
     <v-card-text>
       <v-list two-line>
         <template v-for="game in games">
-          <v-list-item :key="'item' + game.name" :to="'/bingo/' + game.id">
+          <v-list-item :key="'item' + game.BingoID" :to="'/bingo/' + game.BingoID">
             <v-list-item-content>
-              <v-list-item-title>{{ game.name }}</v-list-item-title>
+              <v-list-item-title>{{ game.Name }}</v-list-item-title>
               <v-list-item-subtitle
-                >{{ game.boards }} tableros.</v-list-item-subtitle
+                >{{ game.BoardsSold }} tableros.</v-list-item-subtitle
               >
             </v-list-item-content>
           </v-list-item>
@@ -73,7 +73,9 @@
 </template>
 
 <script>
-import { dialog } from 'electron';
+import { dialog } from "electron";
+import local_api from "~/api/local_api";
+
 export default {
   data: () => ({
     dialog_add: false,
@@ -92,7 +94,21 @@ export default {
       },
     ],
   }),
+  created() {
+    this.loadGames();
+  },
   methods: {
+    loadGames() {
+      console.log("loadGames");
+      try {
+        local_api.api_get("games").then((respuesta) => {
+          console.log(respuesta);
+          this.games = respuesta;
+        });
+      } catch (error) {
+        console.error("failed getting games", error);
+      }
+    },
     submitNewGame() {
       console.log("saving game");
       this.dialog_add = false;

@@ -14,31 +14,34 @@
   "author": "Santiago Riveros <santiago@smartrader.io>",
   "license": "MIT",
   "homepage": "https://github.com/michalzaq12/electron-nuxt/blob/master/README.md",
-  "engines" : {
-    "node" : ">=12.13.0"
+  "engines": {
+    "node": ">=12.13.0"
   },
   "resolutions": {
     "@types/node": "12.12.6"
   },
   "devDependencies": {
-    "@xpda-dev/core": "^0.1.6",
-    "@xpda-dev/electron-launcher": "^0.3.0",
-    "@xpda-dev/electron-builder": "^0.2.1",
-    "@xpda-dev/webpack-step": "^0.1.2",
-    "deepmerge": "4.2.2",
     "@mdi/font": "5.9.55",
+    "@nuxtjs/vuetify": "1.11.3",
+    "@xpda-dev/core": "^0.1.6",
+    "@xpda-dev/electron-builder": "^0.2.1",
+    "@xpda-dev/electron-launcher": "^0.3.0",
+    "@xpda-dev/webpack-step": "^0.1.2",
     "browser-env": "3.3.0",
     "cross-env": "7.0.3",
+    "deepmerge": "4.2.2",
     "electron": "12.0.6",
     "electron-builder": "22.11.3",
-    "nuxt": "2.15.6",
-    "node-sass": "4.14.1",
-    "sass-loader": "10.0.2",
     "electron-devtools-installer": "3.2.0",
+    "node-sass": "4.14.1",
+    "nuxt": "2.15.6",
     "roboto-fontface": "0.10.0",
+    "sass-loader": "10.0.2",
     "vuetify": "2.5.1",
-    "@nuxtjs/vuetify": "1.11.3",
     "webpack": "4.44.2",
     "webpack-node-externals": "2.5.2"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.13.6"
   }
 }

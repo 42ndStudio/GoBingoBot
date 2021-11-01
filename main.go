@@ -31,14 +31,16 @@ func main() {
 
 	var err error
 
-	se.masterID = os.Getenv("MASTER_ID")
-	if err != nil {
-		panic("Missing env['master_id']")
-	}
-
 	go startSQLLiteDB()
 	go runWebServer()
-	go runTelegramUpdater()
+
+	se.masterID = os.Getenv("MASTER_ID")
+	if se.masterID != "" {
+		if err != nil {
+			panic("Missing env['master_id']")
+		}
+		go runTelegramUpdater()
+	}
 
 	select {}
 }
