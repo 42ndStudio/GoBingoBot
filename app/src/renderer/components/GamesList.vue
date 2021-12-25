@@ -14,7 +14,11 @@
     <v-card-text>
       <v-list two-line>
         <template v-for="game in games">
-          <v-list-item v-if="game && game.BingoID" :key="'game' + game.BingoID" :to="'/bingo/' + game.BingoID">
+          <v-list-item
+            v-if="game && game.BingoID"
+            :key="'game' + game.BingoID"
+            :to="'/bingo/' + game.BingoID"
+          >
             <v-list-item-content>
               <v-list-item-title>{{ game.Name }}</v-list-item-title>
               <v-list-item-subtitle
@@ -34,12 +38,14 @@
             <v-row>
               <v-col cols="12">
                 <v-text-field
+                  v-model="game_name"
                   label="Nombre"
                   hint="dale un nombre para identificar este juego."
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field
+                  v-model="game_initial_boards"
                   label="Cartones"
                   type="number"
                   hint="también los puedes generar más tarde."
@@ -93,6 +99,8 @@ export default {
         status: "played",
       },
     ],
+    game_name: '',
+    game_initial_boards: '',
   }),
   created() {
     this.loadGames();
@@ -112,6 +120,17 @@ export default {
     submitNewGame() {
       console.log("saving game");
       this.dialog_add = false;
+      try {
+        local_api.api_post("game/new", {
+          name: this.game_name,
+          boards_sold: this.boards_sold
+        }).then((respuesta) => {
+          console.log(respuesta);
+          this.loadGames();
+        });
+      } catch (error) {
+        console.error("failed getting games", error);
+      }
     },
   },
 };
