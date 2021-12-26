@@ -234,7 +234,7 @@ func (board *BingoBoard) drawImage(outName string) error {
 		panic(err)
 	}
 
-	dc.DrawStringAnchored(fmt.Sprint(board.ID), 215, 190, 0.5, 0.5)
+	dc.DrawStringAnchored(fmt.Sprint(board.BoardID), 215, 190, 0.5, 0.5)
 
 	dc.SetRGB(0, 0, 0)
 	if err := dc.LoadFontFace("moon_get-Heavy.ttf", 96); err != nil {

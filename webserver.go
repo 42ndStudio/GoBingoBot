@@ -170,7 +170,11 @@ func handleGames(w http.ResponseWriter, r *http.Request) {
 		}
 
 		game.Name = inputGame.Name
-		game.IdentifierType = inputGame.IdentifierType
+		if inputGame.IdentifierType != "" {
+			game.IdentifierType = inputGame.IdentifierType
+		} else {
+			game.IdentifierType = "num"
+		}
 
 		fmt.Println("saving game")
 		err = game.guardar()
@@ -224,7 +228,7 @@ func handleBoardGenerate(w http.ResponseWriter, r *http.Request) {
 		board, err := game.generateBoard()
 		go func() {
 			fmt.Println("drawing board")
-			err = board.drawImage(board.BoardHash + ".png")
+			err = board.drawImage(board.BoardID + ".png")
 			if err != nil {
 				strerr := fmt.Sprintf("failed drawing board (%s) for game (%s)", board.BoardID, reqInput.BingoID)
 				logError(strerr, err)
